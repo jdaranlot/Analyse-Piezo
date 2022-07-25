@@ -24,9 +24,9 @@ docopt==0.6.2
 entrypoints==0.4
 executing==0.9.0
 fastjsonschema==2.16.1
-Fiona @ file:///C:/Users/daranlot/pipwin/Fiona-1.8.21-cp39-cp39-win_amd64.whl
+Fiona==1.8.21
 fonttools==4.34.4
-GDAL @ file:///C:/Users/daranlot/pipwin/GDAL-3.4.3-cp39-cp39-win_amd64.whl
+GDAL==3.4.3
 geopandas==0.11.1
 gitdb==4.0.9
 GitPython==3.1.27
