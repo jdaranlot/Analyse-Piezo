@@ -72,7 +72,7 @@ def cmyk_to_rgb(c, m, y, k, cmyk_scale, rgb_scale=1):
     b = rgb_scale * (1.0 - y / float(cmyk_scale)) * (1.0 - k / float(cmyk_scale))
     return r, g, b
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def f_data_litho():  
     # Chargement de la carto lithographie
     URL = 'http://mapsref.brgm.fr/wxs/infoterre/catalogue?SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&TYPENAMES=ms:LITHO_1M_SIMPLIFIEE'
@@ -85,7 +85,7 @@ def f_data_litho():
     data_litho["RGB_px"] = ["rgb" + data_litho.loc[line,"RGB_str"] for line in data_litho.index]
     return data_litho
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def f_data_piezo():
     # Requete de chargement des données auprès de la bdd sqlite
     requete = """
