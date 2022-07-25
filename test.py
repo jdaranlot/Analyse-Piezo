@@ -51,6 +51,7 @@ st.title("Affichage cartographique de données piézomètriques")
 st.markdown("Cette application permet de visualiser la répartition des piézomètres \
             en fonction du type de terrain et du clustering")
 
+@st.cache
 def f_requete_sql (requete) :
     try:
         connexion = sqlite3.connect('./data/liste_piezos.db')
@@ -64,14 +65,14 @@ def f_requete_sql (requete) :
     except sqlite3.Error as error:
         print("Erreur lors du mis à jour dans la table", error)
         
-        
+@st.cache        
 def cmyk_to_rgb(c, m, y, k, cmyk_scale, rgb_scale=1):
     r = rgb_scale * (1.0 - c / float(cmyk_scale)) * (1.0 - k / float(cmyk_scale))
     g = rgb_scale * (1.0 - m / float(cmyk_scale)) * (1.0 - k / float(cmyk_scale))
     b = rgb_scale * (1.0 - y / float(cmyk_scale)) * (1.0 - k / float(cmyk_scale))
     return r, g, b
 
-
+@st.cache
 def f_data_litho():  
     # Chargement de la carto lithographie
     URL = 'http://mapsref.brgm.fr/wxs/infoterre/catalogue?SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&TYPENAMES=ms:LITHO_1M_SIMPLIFIEE'
@@ -84,7 +85,7 @@ def f_data_litho():
     data_litho["RGB_px"] = ["rgb" + data_litho.loc[line,"RGB_str"] for line in data_litho.index]
     return data_litho
 
-
+@st.cache
 def f_data_piezo():
     # Requete de chargement des données auprès de la bdd sqlite
     requete = """
@@ -128,7 +129,7 @@ def f_data_piezo():
 
     return data_piezo
   
-
+@st.cache
 def f_geo_data_piezo(data_litho, data_piezo):
     data_piezo = gpd.GeoDataFrame(data_piezo, geometry=gpd.points_from_xy(data_piezo.longitude, data_piezo.latitude, crs="CRS84"))
     data_piezo.to_crs(crs='EPSG:4326', inplace=True)
@@ -146,7 +147,7 @@ def f_carto(data_litho, data_piezo, cluster_level) :
     
     dict_colors = dict(zip(data_litho.DESCR.unique(), data_litho.RGB_px.unique()))
         
-    fig = px.choropleth_mapbox(data_frame = data_litho, 
+    carto = px.choropleth_mapbox(data_frame = data_litho, 
                      geojson=data_litho["geometry"], 
                      locations = data_litho.index, 
                      color=data_litho["DESCR"],
@@ -183,14 +184,14 @@ def f_carto(data_litho, data_piezo, cluster_level) :
                          ).data
 
     for item in range(len(data_scat)):
-        fig.add_trace(data_scat[item])
-        fig.update_traces(mode="markers", 
+        carto.add_trace(data_scat[item])
+        carto.update_traces(mode="markers", 
                           selector=dict(type='scattermapbox'))
-    fig.update_layout(legend= {'itemsizing': 'constant'},
+    carto.update_layout(legend= {'itemsizing': 'constant'},
                     margin=dict(l=0, r=0, t=0, b=0),
                     autosize=False, width=600, height=600)
 
-    return fig
+    return carto
 
 
 def f_count_plot(data_piezo, data_litho, filtre, valeur, cluster_level):
@@ -206,6 +207,7 @@ def f_count_plot(data_piezo, data_litho, filtre, valeur, cluster_level):
                 data=donnees_cluster)
 
         ax.set_xticklabels("")
+        ax.set_xlim(right=1)
         ax.set_ylabel('')
         ax.set_xlabel('Clusters')
 
@@ -222,13 +224,14 @@ def f_count_plot(data_piezo, data_litho, filtre, valeur, cluster_level):
                         data=donnees_terrain,
                            order = sorted(donnees_terrain.index.drop_duplicates().values))
         ax.set_xticklabels("")
+        ax.set_xlim(right=1)
         ax.set_xlabel('')
         ax.set_ylabel('')
 
     st.pyplot(fig)
     
 
-@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+@st.cache(allow_output_mutation=True)
 def f_chroniques(cluster_level) :
     # Liste des clusters
     requete = f"""
@@ -268,7 +271,7 @@ def f_chroniques(cluster_level) :
     figure = px.line(df_clusters, color_discrete_sequence = px.colors.qualitative.Light24)
     figure.update_layout(legend_title="Clusters")
 
-    st.plotly_chart(figure, use_container_width = True)
+    return figure
             
 
 
@@ -306,7 +309,9 @@ def main():
 
 
     # Plot chroniques clusters
-    f_chroniques(cluster_level)
+    chroniques = f_chroniques(cluster_level)
+    st.plotly_chart(chroniques, use_container_width=True)
+    
 
 
 if __name__ == "__main__":
