@@ -334,10 +334,10 @@ def main():
         colA, colB, colC= st.columns((1,1,1))
 
         with colA :
-            filt_EtatEH = st.multiselect("Choix de la variable Etat :", list_EtatEH, list_EtatEH[0])
+            filt_EtatEH = st.multiselect("Choix de la variable Etat :", list_EtatEH, "Nappe libre")
 
         with colB :
-            filt_MilieuEH = st.multiselect("Choix de la variable Milieu :", list_MilieuEH, list_MilieuEH[0])
+            filt_MilieuEH = st.multiselect("Choix de la variable Milieu :", list_MilieuEH, "Sédimentaire")
             submitted1 = st.form_submit_button('Submit')
 
         with colC :
