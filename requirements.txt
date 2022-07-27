@@ -1,6 +1,6 @@
 geopandas==0.11.1
 matplotlib==3.5.2
-numpy==1.22.4+vanilla
+numpy==1.22.4
 pandas==1.4.3
 plotly==5.9.0
 seaborn==0.11.2
