@@ -8,7 +8,6 @@ import numpy as np
 import geopandas as gpd
 
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap
 import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
@@ -100,10 +99,10 @@ def f_data_piezo():
     data_piezo.columns = ["code_bss", "latitude", "longitude", "altitude_station", "profondeur_investigation", "codes_bdlisa", "cluster_kmeans", "FRANCE_lvl_1", "FRANCE_lvl_2", "FRANCE_lvl_3", "FRANCE_lvl_4", "EtatEH", "NatureEH", "MilieuEH", "ThemeEH", "OrigineEH"]
     data_piezo.set_index("code_bss", inplace=True)
 
-    dict_etat = {"1":"Entité hydrogéologique à nappe captive" , 
-             "2":"Entité hydrogéologique à nappe libre", 
-             "3": "Entité hydrogéologique à parties libres et captives", 
-             "4":"Entité hydrogéologique alternativement libre puis captive"}
+    dict_etat = {"1":"Nappe captive" , 
+             "2":"Nappe libre", 
+             "3": "Parties libres et captives", 
+             "4":"Alternativement libre puis captive"}
     dict_nature = {"0":"inconnue",
                 "3":"Système aquifère", 
                 "5":"Unité aquifère", 
@@ -117,10 +116,16 @@ def f_data_piezo():
                 "6": "Fractures et/ou fissures",
                 "8":"Matricielle / karstique",
                 "9":"Matrice/fracture/karst"}
-    dict_theme = {"1":"Alluvial", 
+    dict_theme = {"0":"inconnue",
+                "1":"Alluvial", 
                 "2":"Sédimentaire", 
                 "3":"Matricielle / fissures" , 
-                "4":"Intensément plissés de montagne"}
+                "4":"Intensément plissés de montagne",
+                "5":"Volcanisme"}
+    dict_origine = {"1":"Carte géologique ou hydrogéologique", 
+                    "2":"Complétude Totale", 
+                    "3":"Complétude Partielle", 
+                    "4":"Agrégation par héritage"}
 
     data_piezo.replace({"EtatEH": dict_etat}, inplace=True)
     data_piezo.replace({"NatureEH": dict_nature}, inplace=True) 
@@ -206,10 +211,9 @@ def f_count_plot(data_piezo, data_litho, filtre, valeur, cluster_level):
                 palette = px.colors.qualitative.Light24,
                 data=donnees_cluster)
 
-        ax.set_xticklabels("")
         ax.set_xlim(right=1)
         ax.set_ylabel('')
-        ax.set_xlabel('Clusters')
+        ax.set_xlabel('')
 
     if filtre == "Cluster" :
         
@@ -223,7 +227,6 @@ def f_count_plot(data_piezo, data_litho, filtre, valeur, cluster_level):
                         palette = customPalette,
                         data=donnees_terrain,
                            order = sorted(donnees_terrain.index.drop_duplicates().values))
-        ax.set_xticklabels("")
         ax.set_xlim(right=1)
         ax.set_xlabel('')
         ax.set_ylabel('')
@@ -270,9 +273,18 @@ def f_chroniques(cluster_level) :
 
     figure = px.line(df_clusters, color_discrete_sequence = px.colors.qualitative.Light24)
     figure.update_layout(legend_title="Clusters")
-
     return figure
             
+
+def f_cluster_terrain (df_data_piezo, cluster_level, filt_EtatEH, filt_MilieuEH, filt_DESCR) :
+    cross_df = pd.crosstab(df_data_piezo[cluster_level], columns=[df_data_piezo["EtatEH"],
+                                                                    df_data_piezo["MilieuEH"],
+                                                                    df_data_piezo["DESCR"]],
+                                                    normalize=True)
+    # Filtrage
+    result_df = pd.DataFrame(cross_df.idxmax(axis=0), columns=["cluster"]).reset_index()
+    result_df = result_df.loc[result_df["EtatEH"].isin(filt_EtatEH) & result_df["MilieuEH"].isin(filt_MilieuEH) & result_df["DESCR"].isin(filt_DESCR)]
+    return result_df
 
 
 def main():    
@@ -281,12 +293,10 @@ def main():
                 2: "FRANCE_lvl_2",
                 3: "FRANCE_lvl_3",
                 4: "FRANCE_lvl_4"}
-
     
     col1, col2 = st.columns((8,3))
 
     with col1 :
-
         st_cluster_level = st.selectbox(label = "Niveau de clustering :", options = (1, 2, 3, 4), index = 2)
         cluster_level = dict_cluster_levels[st_cluster_level]
 
@@ -294,24 +304,59 @@ def main():
 
         data_litho = f_data_litho()    
         data_piezo = f_data_piezo()
-        data_piezo = f_geo_data_piezo(data_litho, data_piezo)   
+        data_piezo = f_geo_data_piezo(data_litho, data_piezo)
+
+        list_DESCR = sorted(data_piezo["DESCR"].drop_duplicates().values)
+        list_clusters = sorted(data_piezo[cluster_level].drop_duplicates().values)
+        list_EtatEH = sorted(data_piezo["EtatEH"].drop_duplicates().values)
+        list_MilieuEH = sorted(data_piezo["MilieuEH"].drop_duplicates().values)
+
 
         carte = f_carto(data_litho, data_piezo, cluster_level)
         st.plotly_chart(carte, use_container_width=True)
 
-    with col2 :   
 
-        valeur_cluster = st.selectbox('Choix du cluster :', tuple(sorted(data_piezo[cluster_level].drop_duplicates().values)))
+
+    with col2 :   
+        valeur_cluster = st.selectbox('Choix du cluster :', tuple(list_clusters))
         f_count_plot(data_piezo, data_litho, "Cluster", valeur_cluster, cluster_level)
 
-        valeur_terrain = st.selectbox('Choix du terrain :', tuple(sorted(data_piezo["DESCR"].drop_duplicates().values)))
+        valeur_terrain = st.selectbox('Choix du terrain :', tuple(list_DESCR))
         f_count_plot(data_piezo, data_litho, "Terrain", valeur_terrain, cluster_level)
 
 
     # Plot chroniques clusters
     chroniques = f_chroniques(cluster_level)
+    st.subheader("Chroniques type des clusters")
+
     st.plotly_chart(chroniques, use_container_width=True)
     
+    with st.form('Form1'): 
+        colA, colB, colC= st.columns((1,1,1))
+
+        with colA :
+            filt_EtatEH = st.multiselect("Choix de la variable Etat :", list_EtatEH, list_EtatEH[0])
+
+        with colB :
+            filt_MilieuEH = st.multiselect("Choix de la variable Milieu :", list_MilieuEH, list_MilieuEH[0])
+            submitted1 = st.form_submit_button('Submit')
+
+        with colC :
+            filt_DESCR = st.multiselect("Choix de la variable DESCR :", list_DESCR, list_DESCR[0])
+           
+
+
+        colD, colE, colF = st.columns((1,3,1))
+
+        with colD:
+            st.empty()
+        with colE:
+            st.subheader("Clusters type en fonction des caractéristiques terrain")
+            df_cluster_terrain = f_cluster_terrain(data_piezo, cluster_level, filt_EtatEH, filt_MilieuEH, filt_DESCR)
+            st.dataframe(df_cluster_terrain)
+        with colF:
+            st.empty()
+
 
 
 if __name__ == "__main__":
