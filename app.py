@@ -1,3 +1,4 @@
+pip install geopandas
 
 import os
 import sqlite3
