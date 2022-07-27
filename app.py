@@ -351,7 +351,7 @@ def main():
         with colD:
             st.empty()
         with colE:
-            st.subheader("Clusters type en fonction des caractéristiques terrain")
+            st.subheader("Cluster type en fonction des caractéristiques terrain")
             df_cluster_terrain = f_cluster_terrain(data_piezo, cluster_level, filt_EtatEH, filt_MilieuEH, filt_DESCR)
             st.dataframe(df_cluster_terrain)
         with colF:
