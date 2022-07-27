@@ -52,7 +52,7 @@ st.markdown("Cette application permet de visualiser la répartition des piézom�
 @st.cache
 def f_requete_sql (requete) :
     try:
-        connexion = sqlite3.connect('./data/liste_piezos.db')
+        connexion = sqlite3.connect('./liste_piezos.db')
         curseur = connexion.cursor()
         curseur.execute(requete)
         connexion.commit()
