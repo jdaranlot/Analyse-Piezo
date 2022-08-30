@@ -52,7 +52,7 @@ st.markdown("Cette application permet de visualiser la répartition des piézom�
 @st.cache
 def f_requete_sql (requete) :
     try:
-        connexion = sqlite3.connect('./liste_piezos.db')
+        connexion = sqlite3.connect('./data/liste_piezos.db')
         curseur = connexion.cursor()
         curseur.execute(requete)
         connexion.commit()
@@ -251,7 +251,7 @@ def f_chroniques(cluster_level) :
     list_chroniques = [item[0] for item in f_requete_sql(requete)]
 
     custom_date_parser = lambda x: datetime.strptime(x, "%Y-%m-%d")
-    chroniques = pd.read_csv(f"./Clustering/data/FRANCE.csv", sep = ";", parse_dates=True, index_col="date_mesure", date_parser=custom_date_parser)
+    chroniques = pd.read_csv(f"./data/clusters/FRANCE.csv", sep = ";", parse_dates=True, index_col="date_mesure", date_parser=custom_date_parser)
 
     df_clusters = pd.DataFrame()
     df_clusters[clusters[0]] = chroniques[list_chroniques].mean(axis=1)
@@ -266,7 +266,7 @@ def f_chroniques(cluster_level) :
             list_chroniques = [item[0] for item in f_requete_sql(requete)]
 
             custom_date_parser = lambda x: datetime.strptime(x, "%Y-%m-%d")
-            chroniques = pd.read_csv(f"../data/clusters/FRANCE.csv", sep = ";", parse_dates=True, index_col="date_mesure", date_parser=custom_date_parser)
+            chroniques = pd.read_csv(f"./data/clusters/FRANCE.csv", sep = ";", parse_dates=True, index_col="date_mesure", date_parser=custom_date_parser)
 
             df_clusters[cluster] = chroniques[list_chroniques].mean(axis=1)
 
