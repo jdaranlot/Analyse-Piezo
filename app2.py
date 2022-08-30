@@ -370,7 +370,7 @@ def main():
     # Filtres pour corrélations cluster terrain
     ## Création des selectbox
     with st.form('Form2'):
-        st.subheader("Corrélation entre clusters et combinaison de cractéristiques terrain")
+        st.subheader("Corrélation entre clusters et combinaison de caractéristiques terrain")
 
         colG, colH, colI, colJ= st.columns((1,1,1,1))
         with colG:
