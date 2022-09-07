@@ -1,4 +1,8 @@
-/data
+data/piezo/
+data/combined_data/
+data/era5/
+
+
 venv/
 
 # Byte-compiled / optimized / DLL files
